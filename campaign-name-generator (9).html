@@ -1,0 +1,766 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Campaign Name Generator</title>
+    <script>
+        // Theme management
+        const themeManager = {
+            // Set theme without saving preference
+            applyTheme: function(theme) {
+                document.documentElement.setAttribute('data-theme', theme);
+                
+                // Update icon if element exists
+                const iconEl = document.getElementById('theme-icon');
+                if (iconEl) {
+                    iconEl.textContent = theme === 'dark' ? '☀️' : '🌙';
+                }
+            },
+            
+            // Toggle and save user preference
+            toggleTheme: function() {
+                const currentTheme = document.documentElement.getAttribute('data-theme') || 'light';
+                const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+                
+                // Apply the theme
+                this.applyTheme(newTheme);
+                
+                // Save user preference
+                try {
+                    localStorage.setItem('theme', newTheme);
+                } catch (e) {}
+            },
+            
+            // Apply system preference without saving
+            applySystemPreference: function() {
+                const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+                this.applyTheme(prefersDark ? 'dark' : 'light');
+            },
+            
+            initialize: function() {
+                // Check for saved preference
+                let userPreference;
+                try {
+                    userPreference = localStorage.getItem('theme');
+                } catch (e) {}
+                
+                if (userPreference) {
+                    // User has a saved preference
+                    this.applyTheme(userPreference);
+                } else {
+                    // No preference, use system setting
+                    this.applySystemPreference();
+                }
+                
+                // Add system preference change listener
+                window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
+                    // Only update if user hasn't set a preference
+                    try {
+                        const savedTheme = localStorage.getItem('theme');
+                        if (!savedTheme) {
+                            this.applyTheme(e.matches ? 'dark' : 'light');
+                        }
+                    } catch (e) {
+                        this.applyTheme(e.matches ? 'dark' : 'light');
+                    }
+                });
+            }
+        };
+        
+        // Initialize when document is ready
+        document.addEventListener('DOMContentLoaded', () => themeManager.initialize());
+        
+        // Global function for button
+        function toggleTheme() {
+            themeManager.toggleTheme();
+        }
+    </script>
+    <style>
+        :root {
+            --bg-color: #ffffff;
+            --container-bg: #f9f9f9;
+            --text-color: #333333;
+            --border-color: #dddddd;
+            --header-color: #2c3e50;
+            --result-bg: #e8f4fd;
+            --result-border: #3498db;
+            --button-bg: #3498db;
+            --button-hover: #2980b9;
+            --error-color: #ff3860;
+            --error-bg: #fff5f7;
+            --info-bg: #3498db;
+            --tooltip-bg: #555;
+            --tooltip-text: #fff;
+        }
+        
+        [data-theme="dark"] {
+            --bg-color: #1a1a1a;
+            --container-bg: #2d2d2d;
+            --text-color: #f0f0f0;
+            --border-color: #444444;
+            --header-color: #4b98db;
+            --result-bg: #2c3e50;
+            --result-border: #4b98db;
+            --button-bg: #4b98db;
+            --button-hover: #3498db;
+            --error-color: #ff6b6b;
+            --error-bg: #442a2a;
+            --info-bg: #4b98db;
+            --tooltip-bg: #333;
+            --tooltip-text: #f0f0f0;
+        }
+        
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            color: var(--text-color);
+            background-color: var(--bg-color);
+            transition: all 0.3s ease;
+        }
+        h1 {
+            color: var(--header-color);
+            text-align: center;
+        }
+        .form-container {
+            background-color: var(--container-bg);
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .form-section {
+            margin-bottom: 20px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid var(--border-color);
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        select, input[type="text"] {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 10px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            box-sizing: border-box;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+        }
+        .result-container {
+            margin-top: 30px;
+            padding: 15px;
+            background-color: var(--result-bg);
+            border-radius: 8px;
+            border-left: 4px solid var(--result-border);
+        }
+        #campaignName {
+            font-family: monospace;
+            font-size: 16px;
+            word-break: break-all;
+        }
+        .copy-btn, .theme-button {
+            background-color: var(--button-bg);
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        .copy-btn:hover, .theme-button:hover {
+            background-color: var(--button-hover);
+        }
+        .hidden {
+            display: none;
+        }
+        .info-icon {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            background-color: var(--info-bg);
+            color: white;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 16px;
+            font-size: 12px;
+            cursor: help;
+            margin-left: 5px;
+        }
+        .tooltip {
+            position: relative;
+            display: inline-block;
+        }
+        .tooltip .tooltiptext {
+            visibility: hidden;
+            width: 200px;
+            background-color: var(--tooltip-bg);
+            color: var(--tooltip-text);
+            text-align: center;
+            border-radius: 6px;
+            padding: 5px;
+            position: absolute;
+            z-index: 1;
+            bottom: 125%;
+            left: 50%;
+            margin-left: -100px;
+            opacity: 0;
+            transition: opacity 0.3s;
+            font-size: 12px;
+            font-weight: normal;
+        }
+        .tooltip:hover .tooltiptext {
+            visibility: visible;
+            opacity: 1;
+        }
+        .error-field {
+            border: 2px solid var(--error-color);
+            background-color: var(--error-bg);
+        }
+        .field-error {
+            color: var(--error-color);
+            font-size: 12px;
+            margin-top: -5px;
+            margin-bottom: 10px;
+        }
+        #errorContainer {
+            color: var(--error-color);
+            background-color: var(--error-bg);
+            border-left: 4px solid var(--error-color);
+            padding: 10px;
+            margin-bottom: 20px;
+            border-radius: 4px;
+        }
+        .error {
+            margin-bottom: 5px;
+        }
+        
+        /* Dark mode toggle */
+        .theme-switch-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 100;
+        }
+        .theme-toggle-btn {
+            background-color: var(--container-bg);
+            color: var(--text-color);
+            border: 1px solid var(--border-color);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            font-size: 20px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .theme-toggle-btn:hover {
+            transform: scale(1.1);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+    </style>
+</head>
+<body>
+    <h1>Campaign Name Generator</h1>
+    
+    <div class="theme-switch-container">
+        <button id="theme-toggle" onclick="toggleTheme()" class="theme-toggle-btn" aria-label="Toggle theme">
+            <span id="theme-icon">🌓</span>
+        </button>
+    </div>
+    
+    <div class="form-container">
+        <div id="errorContainer" class="hidden"></div>
+        
+        <div class="form-section">
+            <label for="channel">Channel:</label>
+            <select id="channel" onchange="updateFormFields()">
+                <option value="">Select a channel</option>
+                <option value="facebook">Facebook</option>
+                <option value="tiktok">TikTok</option>
+                <option value="other">Other Channels</option>
+            </select>
+            <div id="channel-error" class="field-error hidden">Please select a channel</div>
+        </div>
+
+        <div id="mainForm" class="hidden">
+            <div class="form-section">
+                <label for="gameCode">Game Code: 
+                    <span class="tooltip">
+                        <span class="info-icon">i</span>
+                        <span class="tooltiptext">Three-letter code for the game (MOC, CUE, BLJ, etc.)</span>
+                    </span>
+                </label>
+                <input type="text" id="gameCode" placeholder="e.g. MOC" maxlength="3" onkeyup="this.value = this.value.toUpperCase()" onblur="validateField(this)" oninput="generateCampaignName()">
+                <div id="gameCode-error" class="field-error hidden">Game code must be exactly 3 uppercase letters</div>
+                
+                <label for="os">Operating System:</label>
+                <select id="os" onchange="validateField(this); updateFormFields(); generateCampaignName()">
+                    <option value="">Select OS</option>
+                    <option value="Android">Android</option>
+                    <option value="IOS">IOS</option>
+                    <option value="CTV">CTV</option>
+                    <option value="Other">Other</option>
+                </select>
+                <div id="os-error" class="field-error hidden">Please select an operating system</div>
+                
+                <label for="geoTier">Country/GEO-Tier:
+                    <span class="tooltip">
+                        <span class="info-icon">i</span>
+                        <span class="tooltiptext">Two-letter country codes (US, UK), or tiers (T1, T2, WW)</span>
+                    </span>
+                </label>
+                <input type="text" id="geoTier" placeholder="e.g. US, T1, WW" onkeyup="this.value = this.value.toUpperCase()" onblur="validateField(this)" oninput="generateCampaignName()">
+                <div id="geoTier-error" class="field-error hidden">Please enter a valid country code or GEO tier</div>
+            </div>
+            
+            <div class="form-section">
+                <label for="optimizationType">Optimization Type:
+                    <span class="tooltip">
+                        <span class="info-icon">i</span>
+                        <span class="tooltiptext">
+                            AEO: Optimizes for specific event completion<br>
+                            Incentive: Users rewarded for events<br>
+                            Install: Maximizes installs at lowest cost<br>
+                            Organic: Traffic from app stores/unidentified<br>
+                            Retargeting: Targets churned users<br>
+                            Search: Bids on search keywords<br>
+                            Test: Testing campaigns<br>
+                            VO: Optimizes for maximum revenue (IAA/IAP/Hybrid)
+                        </span>
+                    </span>
+                </label>
+                <select id="optimizationType" onchange="validateField(this); updateOptimizationFields(); generateCampaignName()">
+                    <option value="">Select type</option>
+                    <option value="Install">Install</option>
+                    <option value="AEO">AEO</option>
+                    <option value="VO-IAA">VO-IAA</option>
+                    <option value="VO-IAP">VO-IAP</option>
+                    <option value="VO-Hybrid">VO-Hybrid</option>
+                    <option value="Retargeting">Retargeting</option>
+                    <option value="Search">Search</option>
+                    <option value="Rewarded">Rewarded</option>
+                </select>
+                <div id="optimizationType-error" class="field-error hidden">Please select an optimization type</div>
+                
+                <div id="aeoEventContainer" class="hidden">
+                    <label for="aeoEvent">AEO Event Name:
+                        <span class="tooltip">
+                            <span class="info-icon">i</span>
+                            <span class="tooltiptext">
+                                Enter the exact event name to optimize for:<br>
+                                - Purchase (all purchase events)<br>
+                                - 10_games_played<br>
+                                - 300k_coins_earned<br>
+                                Retention or ad-revenue based events
+                            </span>
+                        </span>
+                    </label>
+                    <input type="text" id="aeoEvent" placeholder="e.g. Purchase" onblur="validateField(this)" oninput="generateCampaignName()">
+                    <div id="aeoEvent-error" class="field-error hidden">Please enter an event name</div>
+                </div>
+                
+                <div id="retargetingSegmentContainer" class="hidden">
+                    <label for="retargetingSegment">Retargeting Segment:
+                        <span class="tooltip">
+                            <span class="info-icon">i</span>
+                            <span class="tooltiptext">
+                                Segment being retargeted:<br>
+                                - NPU: All Non-Paying-Users<br>
+                                - PU: All Paying-Users<br>
+                                - NPU-Top10: Non-Paying top 10% in revenue<br>
+                                - PU-Top10-30: Paying users in 10-30% revenue range
+                            </span>
+                        </span>
+                    </label>
+                    <input type="text" id="retargetingSegment" placeholder="e.g. PU, NPU" onblur="validateField(this)" oninput="generateCampaignName()">
+                    <div id="retargetingSegment-error" class="field-error hidden">Please enter a retargeting segment</div>
+                </div>
+                
+                <label for="optimizationWindow">Optimization Window:</label>
+                <select id="optimizationWindow" onchange="validateField(this); generateCampaignName()">
+                    <option value="">Select window</option>
+                    <option value="D0">D0</option>
+                    <option value="D1">D1</option>
+                    <option value="D3">D3</option>
+                    <option value="D7">D7</option>
+                    <option value="D14">D14</option>
+                    <option value="D28">D28</option>
+                </select>
+                <div id="optimizationWindow-error" class="field-error hidden">Please select an optimization window</div>
+            </div>
+            
+            <div id="campaignModelContainer" class="hidden form-section">
+                <label for="campaignModel">Campaign Model:</label>
+                <select id="campaignModel" onchange="validateField(this); generateCampaignName()">
+                    <option value="">Select model</option>
+                    <option value="Manual">Manual</option>
+                    <option value="AdvP">AdvP (Advantage+)</option>
+                    <option value="SPC">SPC (Smart+)</option>
+                    <option value="ADC">ADC</option>
+                </select>
+                <div id="campaignModel-error" class="field-error hidden">Please select a campaign model</div>
+            </div>
+            
+            <div id="attributionModelContainer" class="hidden form-section">
+                <label for="attributionModel">Attribution Model:</label>
+                <select id="attributionModel" onchange="validateField(this); generateCampaignName()">
+                    <option value="">Select model</option>
+                    <option value="SKAN">SKAN</option>
+                    <option value="AEM">AEM</option>
+                </select>
+                <div id="attributionModel-error" class="field-error hidden">Please select an attribution model</div>
+            </div>
+            
+            <div class="form-section">
+                <label for="lookalike">Lookalike Audience (optional):</label>
+                <input type="text" id="lookalike" placeholder="Lookalike audience name" oninput="generateCampaignName()">
+                
+                <label for="customNotes">Custom Notes (optional):</label>
+                <input type="text" id="customNotes" placeholder="Any additional information" oninput="generateCampaignName()">
+            </div>
+        </div>
+        
+        <div id="resultContainer" class="result-container hidden">
+            <h3>Generated Campaign Name:</h3>
+            <p id="campaignName"></p>
+            <button class="copy-btn" onclick="copyToClipboard()">Copy to Clipboard</button>
+        </div>
+    </div>
+
+    <script>
+        // Validation rules for fields
+        const validationRules = {
+            'channel': {
+                required: true,
+                message: 'Please select a channel'
+            },
+            'gameCode': {
+                required: true,
+                pattern: /^[A-Z]{3}$/,
+                message: 'Game code must be exactly 3 uppercase letters'
+            },
+            'os': {
+                required: true,
+                message: 'Please select an operating system'
+            },
+            'geoTier': {
+                required: true,
+                pattern: /^([A-Z]{2}(-[A-Z]{2}){0,4}|T[1-4]|WW|RoW)$/,
+                message: 'Please enter a valid country code (US) or GEO tier (T1, WW)'
+            },
+            'optimizationType': {
+                required: true,
+                message: 'Please select an optimization type'
+            },
+            'aeoEvent': {
+                conditionallyRequired: function() {
+                    return document.getElementById('optimizationType').value === 'AEO';
+                },
+                message: 'Please enter an event name for AEO'
+            },
+            'retargetingSegment': {
+                conditionallyRequired: function() {
+                    return document.getElementById('optimizationType').value === 'Retargeting';
+                },
+                message: 'Please enter a retargeting segment'
+            },
+            'optimizationWindow': {
+                required: true,
+                message: 'Please select an optimization window'
+            },
+            'campaignModel': {
+                conditionallyRequired: function() {
+                    const channel = document.getElementById('channel').value;
+                    return channel === 'facebook' || channel === 'tiktok';
+                },
+                message: 'Please select a campaign model'
+            },
+            'attributionModel': {
+                conditionallyRequired: function() {
+                    const channel = document.getElementById('channel').value;
+                    const os = document.getElementById('os').value;
+                    return channel === 'facebook' && os === 'IOS';
+                },
+                message: 'Please select an attribution model'
+            }
+        };
+        
+        // Field tracking to know which fields have been interacted with
+        const touchedFields = {};
+        
+        // Validate a field based on its rules
+        function validateField(field) {
+            const fieldId = field.id;
+            const fieldValue = field.value;
+            const rules = validationRules[fieldId];
+            
+            // Mark this field as touched
+            touchedFields[fieldId] = true;
+            
+            if (!rules) return true; // No rules for this field
+            
+            const errorElement = document.getElementById(`${fieldId}-error`);
+            
+            // Check if field is required
+            if (rules.required && !fieldValue) {
+                showFieldError(field, errorElement, rules.message);
+                return false;
+            }
+            
+            // Check if field is conditionally required
+            if (rules.conditionallyRequired && rules.conditionallyRequired() && !fieldValue) {
+                showFieldError(field, errorElement, rules.message);
+                return false;
+            }
+            
+            // Check pattern if applicable
+            if (rules.pattern && fieldValue && !rules.pattern.test(fieldValue)) {
+                showFieldError(field, errorElement, rules.message);
+                return false;
+            }
+            
+            // Field is valid
+            hideFieldError(field, errorElement);
+            return true;
+        }
+        
+        // Show error for a field
+        function showFieldError(field, errorElement, message) {
+            field.classList.add('error-field');
+            if (errorElement) {
+                errorElement.textContent = message;
+                errorElement.classList.remove('hidden');
+            }
+        }
+        
+        // Hide error for a field
+        function hideFieldError(field, errorElement) {
+            field.classList.remove('error-field');
+            if (errorElement) {
+                errorElement.classList.add('hidden');
+            }
+        }
+        
+        // Validate all required fields
+        function validateAllFields() {
+            const errors = [];
+            let isValid = true;
+            
+            // Validate each field with rules
+            for (const fieldId in validationRules) {
+                const field = document.getElementById(fieldId);
+                if (!field) continue;
+                
+                // Skip validation for hidden fields
+                if (field.offsetParent === null && 
+                    !validationRules[fieldId].required) continue;
+                
+                // Only validate if the field has been touched or we're submitting
+                if (touchedFields[fieldId]) {
+                    const isFieldValid = validateField(field);
+                    if (!isFieldValid) {
+                        isValid = false;
+                        errors.push(validationRules[fieldId].message);
+                    }
+                }
+            }
+            
+            // Show overall error message if needed
+            const errorContainer = document.getElementById('errorContainer');
+            if (errors.length > 0) {
+                errorContainer.innerHTML = `<p><strong>Please correct the following:</strong></p>` + 
+                    errors.map(e => `<div class="error">• ${e}</div>`).join('');
+                errorContainer.classList.remove('hidden');
+            } else {
+                errorContainer.classList.add('hidden');
+            }
+            
+            return isValid;
+        }
+        
+        function updateFormFields() {
+            const channel = document.getElementById('channel').value;
+            const os = document.getElementById('os').value;
+            const mainForm = document.getElementById('mainForm');
+            const campaignModelContainer = document.getElementById('campaignModelContainer');
+            const attributionModelContainer = document.getElementById('attributionModelContainer');
+            
+            // Show/hide main form based on channel selection
+            if (channel) {
+                mainForm.classList.remove('hidden');
+            } else {
+                mainForm.classList.add('hidden');
+                return;
+            }
+            
+            // Show/hide campaign model based on channel
+            if (channel === 'facebook' || channel === 'tiktok') {
+                campaignModelContainer.classList.remove('hidden');
+                // Reset any error state when newly showing the field
+                hideFieldError(document.getElementById('campaignModel'), 
+                               document.getElementById('campaignModel-error'));
+            } else {
+                campaignModelContainer.classList.add('hidden');
+            }
+            
+            // Show/hide attribution model based on channel and OS
+            if (channel === 'facebook' && os === 'IOS') {
+                attributionModelContainer.classList.remove('hidden');
+                // Reset any error state when newly showing the field
+                hideFieldError(document.getElementById('attributionModel'), 
+                               document.getElementById('attributionModel-error'));
+            } else {
+                attributionModelContainer.classList.add('hidden');
+            }
+            
+            // Only validate if this field has been touched
+            if (touchedFields['channel']) {
+                validateField(document.getElementById('channel'));
+            }
+            
+            generateCampaignName();
+        }
+        
+        function updateOptimizationFields() {
+            const optimizationType = document.getElementById('optimizationType').value;
+            const aeoEventContainer = document.getElementById('aeoEventContainer');
+            const retargetingSegmentContainer = document.getElementById('retargetingSegmentContainer');
+            
+            // Show/hide AEO event field
+            if (optimizationType === 'AEO') {
+                aeoEventContainer.classList.remove('hidden');
+            } else {
+                aeoEventContainer.classList.add('hidden');
+            }
+            
+            // Show/hide retargeting segment field
+            if (optimizationType === 'Retargeting') {
+                retargetingSegmentContainer.classList.remove('hidden');
+            } else {
+                retargetingSegmentContainer.classList.add('hidden');
+            }
+            
+            // Only validate if this field has been touched
+            if (touchedFields['optimizationType']) {
+                validateField(document.getElementById('optimizationType'));
+            }
+            
+            generateCampaignName();
+        }
+        
+        function generateCampaignName() {
+            const channel = document.getElementById('channel').value;
+            const gameCode = document.getElementById('gameCode').value;
+            const os = document.getElementById('os').value;
+            const geoTier = document.getElementById('geoTier').value;
+            const optimizationType = document.getElementById('optimizationType').value;
+            const aeoEvent = document.getElementById('aeoEvent').value;
+            const retargetingSegment = document.getElementById('retargetingSegment').value;
+            const optimizationWindow = document.getElementById('optimizationWindow').value;
+            const campaignModel = document.getElementById('campaignModel').value;
+            const attributionModel = document.getElementById('attributionModel').value;
+            const lookalike = document.getElementById('lookalike').value;
+            const customNotes = document.getElementById('customNotes').value;
+            
+            // Only validate touched fields
+            validateAllFields();
+            
+            // Check if we have the minimum fields filled in
+            if (!channel || !gameCode || !os || !geoTier || !optimizationType || !optimizationWindow) {
+                document.getElementById('resultContainer').classList.add('hidden');
+                return;
+            }
+            
+            // Do a complete validation before showing result, but DON'T mark fields as touched
+            // or show errors unless they've already been interacted with
+            const allFieldsValid = Object.keys(validationRules).every(fieldId => {
+                const field = document.getElementById(fieldId);
+                if (!field) return true;
+                
+                // Skip hidden fields
+                if (field.offsetParent === null) return true;
+                
+                // For visible fields, check if valid but don't update UI unless touched
+                const rules = validationRules[fieldId];
+                let isValid = true;
+                
+                // Check requirements without showing errors
+                if (rules.required && !field.value) {
+                    isValid = false;
+                }
+                
+                if (rules.conditionallyRequired && rules.conditionallyRequired() && !field.value) {
+                    isValid = false;
+                }
+                
+                if (rules.pattern && field.value && !rules.pattern.test(field.value)) {
+                    isValid = false;
+                }
+                
+                // Only show errors for fields the user has interacted with
+                if (!isValid && touchedFields[fieldId]) {
+                    validateField(field); // This will show the error
+                }
+                
+                return isValid;
+            });
+            
+            if (!allFieldsValid) {
+                document.getElementById('resultContainer').classList.add('hidden');
+                return;
+            }
+            
+            // Construct optimization type with brackets if needed
+            let optimizationTypeFormatted = optimizationType;
+            if (optimizationType === 'AEO' && aeoEvent) {
+                optimizationTypeFormatted += `[${aeoEvent}]`;
+            } else if (optimizationType === 'Retargeting' && retargetingSegment) {
+                optimizationTypeFormatted += `[${retargetingSegment}]`;
+            }
+            
+            // Build campaign name based on channel and OS
+            let campaignName = `${gameCode}_${os}_${geoTier}_${optimizationTypeFormatted}_${optimizationWindow}`;
+            
+            // Add campaign model if applicable
+            if ((channel === 'facebook' || channel === 'tiktok') && campaignModel) {
+                campaignName += `_${campaignModel}`;
+            }
+            
+            // Add attribution model if applicable
+            if (channel === 'facebook' && os === 'IOS' && attributionModel) {
+                campaignName += `_${attributionModel}`;
+            }
+            
+            // Add lookalike if provided
+            if (lookalike) {
+                campaignName += `_${lookalike}`;
+            }
+            
+            // Add custom notes if provided
+            if (customNotes) {
+                campaignName += `_${customNotes}`;
+            }
+            
+            // Display the result
+            document.getElementById('campaignName').textContent = campaignName;
+            document.getElementById('resultContainer').classList.remove('hidden');
+        }
+        
+        function copyToClipboard() {
+            const campaignName = document.getElementById('campaignName').textContent;
+            navigator.clipboard.writeText(campaignName).then(() => {
+                alert('Campaign name copied to clipboard!');
+            }).catch(err => {
+                console.error('Could not copy text: ', err);
+            });
+        }
+    </script>
+</body>
+</html>
