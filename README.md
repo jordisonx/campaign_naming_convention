@@ -69,6 +69,3 @@
             - **💡Example:** MOC_Android_US_VO-IAA_D3_[NoMid_FS30_Win_Loss]
             - **💡Example:** BLJ_IOS_WW_VO-IAA_D28
             - **💡Example:** MOC_Android_US_Retargeting[PU]_D0
-- **BeachBum Campaign Naming Convention**
-    
-    ![Screenshot 2025-03-11 at 18.00.30.png](Campaign%20Naming%20Convention%201aea0b481db4804f9eeaff5ae6633b31/Screenshot_2025-03-11_at_18.00.30.png)
