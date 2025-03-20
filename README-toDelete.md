@@ -1,1 +1,0 @@
-# campaign_naming_convention
